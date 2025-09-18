@@ -244,36 +244,36 @@ $materials_result = mysqli_query($conn, $materials_query);
 
                 <!-- Seller Details Section -->
                 <div class="section-divider">
-                    <h4 class="main-text mb-3">Seller Details</h4>
+                    <h4 class="main-text mb-3">Supplier Details</h4>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label>Seller Name</label>
-                        <input type="text" name="seller_name" class="form-control" required>
+                        <label>Supplier Name</label>
+                        <input type="text" name="seller_name" id="seller_name" class="form-control" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label>Seller Company Name</label>
-                        <input type="text" name="seller_company" class="form-control" required>
+                        <label>Supplier Company Name</label>
+                        <input type="text" name="seller_company" id="seller_company" class="form-control" required>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Address</label>
-                        <textarea name="seller_address" class="form-control" rows="2" required></textarea>
+                        <textarea name="seller_address" id="seller_address" class="form-control" rows="2" required></textarea>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>Phone</label>
-                        <input type="text" name="seller_phone" class="form-control" required>
+                        <input type="text" name="seller_phone" id="seller_phone" class="form-control" required>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>GST ID</label>
-                        <input type="text" name="seller_gst" class="form-control">
+                        <input type="text" name="seller_gst" id="seller_gst" class="form-control">
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>Email ID</label>
-                        <input type="email" name="seller_email" class="form-control">
+                        <input type="email" name="seller_email" id="seller_email" class="form-control">
                     </div>
                 </div>
 
@@ -353,6 +353,7 @@ $materials_result = mysqli_query($conn, $materials_query);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="js/supplier-dropdown.js"></script>
     <script src="includes/sidebar.js"></script>
     <script>
         $(document).ready(function() {
@@ -360,6 +361,18 @@ $materials_result = mysqli_query($conn, $materials_query);
 
             // Initialize sidebar
             initializeSidebar();
+
+            // Initialize supplier dropdown for auto-completion
+            if (window.supplierDropdown) {
+                window.supplierDropdown.initializeDropdown({
+                    nameFieldId: 'seller_name',
+                    companyFieldId: 'seller_company',
+                    phoneFieldId: 'seller_phone',
+                    emailFieldId: 'seller_email',
+                    addressFieldId: 'seller_address',
+                    gstFieldId: 'seller_gst'
+                });
+            }
 
             function calculateGrandTotal() {
                 let grandTotal = 0;

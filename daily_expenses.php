@@ -19,6 +19,7 @@ if(isset($_GET['error'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Expenses</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="includes/sidebar.css" rel="stylesheet">
     <style>
         :root {
@@ -82,8 +83,9 @@ if(isset($_GET['error'])) {
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label main-text">Purchase Order</label>
-                            <input type="text" name="purchase_order" class="form-control">
+                            <label class="form-label main-text">Purchase Order Total</label>
+                            <input type="number" step="0.01" name="purchase_order" id="purchase_order" class="form-control" readonly>
+                            <small class="text-muted" id="po_details"></small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label main-text">Salary</label>
@@ -121,7 +123,62 @@ if(isset($_GET['error'])) {
     <script>
         $(document).ready(function() {
             initializeSidebar();
+            
+            // Event listener for date input change
+            $('input[name="expense_date"]').on('change', function() {
+                const selectedDate = $(this).val();
+                if (selectedDate) {
+                    fetchPOTotalByDate(selectedDate);
+                } else {
+                    // Clear the purchase order field if no date is selected
+                    $('#purchase_order').val('');
+                    $('#po_details').text('');
+                }
+            });
+            
+            // Load PO total for today's date by default
+            const todayDate = $('input[name="expense_date"]').val();
+            if (todayDate) {
+                fetchPOTotalByDate(todayDate);
+            }
         });
+        
+        function fetchPOTotalByDate(date) {
+            // Show loading state
+            $('#purchase_order').val('Loading...');
+            $('#po_details').html('<i class="fas fa-spinner fa-spin"></i> Calculating PO totals...');
+            
+            $.ajax({
+                url: 'get_po_total_by_date.php',
+                type: 'GET',
+                data: { date: date },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        $('#purchase_order').val(response.total.toFixed(2));
+                        
+                        if (response.count > 0) {
+                            let detailsHtml = `<strong>Found ${response.count} PO(s):</strong><br>`;
+                            response.details.forEach(function(po) {
+                                detailsHtml += `${po.po_number}: ₹${po.amount.toFixed(2)}<br>`;
+                            });
+                            detailsHtml += `<strong>Total: ₹${response.total.toFixed(2)}</strong>`;
+                            $('#po_details').html(detailsHtml);
+                        } else {
+                            $('#po_details').html('<span class="text-warning">No purchase orders found for this date</span>');
+                        }
+                    } else {
+                        $('#purchase_order').val('0.00');
+                        $('#po_details').html(`<span class="text-danger">Error: ${response.error || 'Failed to fetch PO data'}</span>`);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#purchase_order').val('0.00');
+                    $('#po_details').html('<span class="text-danger">Error connecting to server</span>');
+                    console.error('AJAX Error:', error);
+                }
+            });
+        }
     </script>
 </body>
 </html>

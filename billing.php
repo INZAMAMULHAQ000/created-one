@@ -304,7 +304,7 @@ $transports_result = mysqli_query($conn, $transports_query);
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Customer Name</label>
-                        <input type="text" name="customer_name" class="form-control" required>
+                        <input type="text" name="customer_name" id="customer_name" class="form-control" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>GSTIN ID</label>
@@ -312,15 +312,15 @@ $transports_result = mysqli_query($conn, $transports_query);
                     </div>
                 </div>
 
-                <!-- New fields for address and phone -->
+                <!-- Customer fields with dropdown integration -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Address</label>
-                        <textarea name="customer_address" class="form-control" rows="2" required></textarea>
+                        <textarea name="customer_address" id="customer_address" class="form-control" rows="2" required></textarea>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>Phone No</label>
-                        <input type="text" name="customer_phone" class="form-control" required>
+                        <input type="text" name="customer_phone" id="customer_phone" class="form-control" required>
                     </div>
                 </div>
 
@@ -411,10 +411,20 @@ $transports_result = mysqli_query($conn, $transports_query);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="js/customer-dropdown.js"></script>
     <script src="includes/sidebar.js"></script>
     <script>
         $(document).ready(function() {
             $('#material').select2();
+
+            // Initialize customer dropdown
+            if (typeof customerDropdown !== 'undefined') {
+                customerDropdown.initializeDropdown({
+                    nameFieldId: 'customer_name',
+                    phoneFieldId: 'customer_phone',
+                    addressFieldId: 'customer_address'
+                });
+            }
 
             // Initialize sidebar
             initializeSidebar();

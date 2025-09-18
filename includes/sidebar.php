@@ -25,6 +25,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <li><a href="expense_history.php" <?php echo ($current_page == 'expense_history.php') ? 'class="active"' : ''; ?>>💸 Expense History</a></li>
         
         <li class="menu-section">Management</li>
+        <li><a href="customers.php" <?php echo ($current_page == 'customers.php') ? 'class="active"' : ''; ?>>👥 Customer Master</a></li>
+        <li><a href="suppliers.php" <?php echo ($current_page == 'suppliers.php') ? 'class="active"' : ''; ?>>🏪 Supplier Master</a></li>
         <li><a href="materials.php" <?php echo ($current_page == 'materials.php') ? 'class="active"' : ''; ?>>🏗️ Materials</a></li>
         <li><a href="transport.php" <?php echo ($current_page == 'transport.php') ? 'class="active"' : ''; ?>>🚛 Transport</a></li>
         

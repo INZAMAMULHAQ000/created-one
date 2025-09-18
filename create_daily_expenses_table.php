@@ -4,7 +4,7 @@ require_once "config/database.php";
 $sql = "CREATE TABLE IF NOT EXISTS daily_expenses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     expense_date DATE NOT NULL UNIQUE,
-    purchase_order VARCHAR(255),
+    purchase_order DECIMAL(10, 2) DEFAULT 0.00,
     salary DECIMAL(10, 2),
     printing_services DECIMAL(10, 2),
     petrol_expense DECIMAL(10, 2),

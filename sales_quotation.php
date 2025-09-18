@@ -266,21 +266,21 @@ $materials_result = mysqli_query($conn, $materials_query);
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label main-text">Customer Name</label>
-                        <input type="text" name="customer_name" class="form-control" required>
+                        <input type="text" name="customer_name" id="customer_name" class="form-control" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label main-text">Customer Company (Optional)</label>
-                        <input type="text" name="customer_company" class="form-control">
+                        <input type="text" name="customer_company" id="customer_company" class="form-control">
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label main-text">Address</label>
-                        <textarea name="customer_address" class="form-control" rows="2" required></textarea>
+                        <textarea name="customer_address" id="customer_address" class="form-control" rows="2" required></textarea>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label main-text">Phone No</label>
-                        <input type="text" name="customer_phone" class="form-control" required>
+                        <input type="text" name="customer_phone" id="customer_phone" class="form-control" required>
                     </div>
                 </div>
 
@@ -351,10 +351,21 @@ $materials_result = mysqli_query($conn, $materials_query);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min..js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="js/customer-dropdown.js"></script>
     <script src="includes/sidebar.js"></script>
     <script>
         $(document).ready(function() {
             $('#material').select2();
+
+            // Initialize customer dropdown
+            if (typeof customerDropdown !== 'undefined') {
+                customerDropdown.initializeDropdown({
+                    nameFieldId: 'customer_name',
+                    companyFieldId: 'customer_company',
+                    phoneFieldId: 'customer_phone',
+                    addressFieldId: 'customer_address'
+                });
+            }
 
             // Initialize sidebar
             initializeSidebar();

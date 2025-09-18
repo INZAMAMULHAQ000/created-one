@@ -63,6 +63,7 @@ mysqli_close($conn);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Change Password</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="includes/sidebar.css" rel="stylesheet">
     <style>
         :root {
             --background-color: #f8f9fa;
@@ -182,23 +183,11 @@ mysqli_close($conn);
     </style>
 </head>
 <body class="dark-theme">
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand main-text" href="billing.php">
-                <img src="Sun.jpeg" alt="Company Logo" style="height: 90px; margin-right: 10px; vertical-align: middle;">
-                Madhu PaperBags
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="materials.php">Manage Materials</a>
-                <a class="nav-link" href="transport.php">Manage Transport</a>
-                <a class="nav-link" href="change_password.php">Change Password</a>
-                <button id="themeToggle" class="btn btn-secondary ms-2">Toggle Theme</button>
-                <a class="nav-link" href="logout.php">Logout</a>
-            </div>
-        </div>
-    </nav>
+    <?php include 'includes/sidebar.php'; ?>
 
-    <div class="container password-form mt-5">
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container password-form mt-5">
         <h2 class="text-center mb-4 main-text">Change Password</h2>
 
         <?php if (!empty($message)): ?>
@@ -228,6 +217,7 @@ mysqli_close($conn);
             </div>
             <p class="text-center mt-3 main-text">Forgot your old password? <a href="forgot_password.php">Reset it here</a>.</p>
         </form>
+        </div>
     </div>
 
     <div id="dynamicLogoContainer">
@@ -236,9 +226,13 @@ mysqli_close($conn);
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="includes/sidebar.js"></script>
     <script>
         $(document).ready(function() {
-            // Dynamic Logo Logic (copied from billing.php)
+            // Initialize sidebar
+            initializeSidebar();
+            
+            // Dynamic Logo Logic
             let idleTimeout;
             const dynamicLogoContainer = $('#dynamicLogoContainer');
             const idleTime = 2000; // 2 seconds of inactivity before hiding
@@ -260,26 +254,6 @@ mysqli_close($conn);
 
             // Initial hide after page load
             idleTimeout = setTimeout(hideLogo, idleTime);
-
-            // Theme Toggle Logic (copied from billing.php)
-            $('#themeToggle').on('click', function() {
-                $('body').toggleClass('light-theme dark-theme');
-                // Save preference to localStorage
-                if ($('body').hasClass('light-theme')) {
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    localStorage.setItem('theme', 'dark');
-                }
-            });
-
-            // Load theme preference on page load
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                $('body').removeClass('light-theme dark-theme').addClass(savedTheme + '-theme');
-            } else {
-                // Default to dark if no preference saved
-                $('body').addClass('dark-theme');
-            }
 
             // --- Real-time Password Validation ---
 

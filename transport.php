@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Transport</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="includes/sidebar.css" rel="stylesheet">
     <style>
         :root {
             --background-color: #f8f9fa;
@@ -217,47 +218,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     </style>
 </head>
 <body class="dark-theme">
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <?php include 'includes/sidebar.php'; ?>
+
+    <!-- Main Content -->
+    <div class="main-content">
         <div class="container">
-            <a class="navbar-brand main-text" href="billing.php">
-                <img src="Sun.jpeg" alt="Company Logo" style="height: 90px; margin-right: 10px; vertical-align: middle;">
-                Madhu PaperBags
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="materials.php">Manage Materials</a>
-                <a class="nav-link" href="transport.php">Manage Transport</a>
-                <a class="nav-link" href="customer_history.php">Customer History</a>
-                <a class="nav-link" href="change_password.php">Change Password</a>
-                <button id="themeToggle" class="btn btn-secondary ms-2">Toggle Theme</button>
-                <a class="nav-link" href="logout.php">Logout</a>
+            <div class="transports-form mb-4">
+                <h2 class="text-center mb-4 main-text">Manage Transport</h2>
+                <form id="addTransportForm" class="row g-3">
+                    <div class="col-md-10">
+                        <input type="text" class="form-control" id="transportName" placeholder="Mode of Transport" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-accent w-100">Add</button>
+                    </div>
+                </form>
             </div>
-        </div>
-    </nav>
-    <div class="container">
-        <div class="transports-form mb-4">
-            <h2 class="text-center mb-4 main-text">Manage Transport</h2>
-            <form id="addTransportForm" class="row g-3">
-                <div class="col-md-10">
-                    <input type="text" class="form-control" id="transportName" placeholder="Mode of Transport" required>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-success w-100">Add</button>
-                </div>
-            </form>
-        </div>
-        <div class="transports-table">
-            <h4 class="mb-3 main-text">Transport Modes List</h4>
-            <table class="table table-hover" id="transportsTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Transports will be loaded here -->
-                </tbody>
-            </table>
+            <div class="transports-table">
+                <h4 class="mb-3 main-text">Transport Modes List</h4>
+                <table class="table table-hover" id="transportsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Transports will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -266,6 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="includes/sidebar.js"></script>
     <script>
         function fetchTransports() {
             $.post('transport.php', {action: 'fetch'}, function(data) {
@@ -275,7 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         rows += `<tr data-id="${tr.id}">
                             <td><span class="tr-name">${tr.name}</span></td>
                             <td>
-                                <button class="btn btn-sm btn-info edit-btn">Edit</button>
+                                <button class="btn btn-sm btn-accent edit-btn">Edit</button>
                                 <button class="btn btn-sm btn-danger delete-btn">Delete</button>
                             </td>
                         </tr>`;
@@ -286,6 +277,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
 
         $(document).ready(function() {
+            // Initialize sidebar
+            initializeSidebar();
+            
             fetchTransports();
 
             // Dynamic Logo Logic
@@ -359,26 +353,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     }, 'json');
                 }
             });
-
-            // Theme Toggle Logic
-            $('#themeToggle').on('click', function() {
-                $('body').toggleClass('light-theme dark-theme');
-                // Save preference to localStorage
-                if ($('body').hasClass('light-theme')) {
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    localStorage.setItem('theme', 'dark');
-                }
-            });
-
-            // Load theme preference on page load
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                $('body').removeClass('light-theme dark-theme').addClass(savedTheme + '-theme');
-            } else {
-                // Default to dark if no preference saved
-                $('body').addClass('dark-theme');
-            }
         });
     </script>
 </body>

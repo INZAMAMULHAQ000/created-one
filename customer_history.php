@@ -30,6 +30,7 @@ mysqli_close($conn);
     <title>Customer History</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="includes/sidebar.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
         :root {
@@ -326,52 +327,12 @@ mysqli_close($conn);
     </style>
 </head>
 <body class="dark-theme">
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="billing.php">
-                <img src="Sun.jpeg" alt="Sun Logo" style="height: 90px; margin-right: 10px; vertical-align: middle;">
-                <span class="main-text"> Madhu PaperBags</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="billing.php" style="color: var(--main-text-color) !important;">Billing</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="materials.php" style="color: var(--main-text-color) !important;">Materials</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="transport.php" style="color: var(--main-text-color) !important;">Transport</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="customer_history.php" style="color: var(--main-text-color) !important;">Customer History</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="delete_invoices.php" style="color: var(--main-text-color) !important;">Delete All Invoices</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="change_password.php" style="color: var(--main-text-color) !important;">Change Password</a>
-                    </li>
-                    <li class="nav-item">
-                        <button id="themeToggle" class="btn btn-secondary ms-2">Toggle Theme</button>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="logout.php" style="color: var(--main-text-color) !important;">Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php include 'includes/sidebar.php'; ?>
 
-    <div id="dynamicLogoContainer">
-        <img src="logo.png" alt="Company Logo">
-    </div>
-
-    <div class="container mt-5">
-        <h2 class="text-center mb-4 main-text">Customer Invoice History</h2>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container mt-5">
+            <h2 class="text-center mb-4 main-text">Customer Invoice History</h2>
 
         <?php if (isset($_GET['status']) && $_GET['status'] == 'success' && isset($_GET['invoice'])): ?>
             <div class="message-box success">
@@ -420,34 +381,23 @@ mysqli_close($conn);
                 </table>
             </div>
         <?php endif; ?>
+        </div>
+    </div>
+
+    <div id="dynamicLogoContainer">
+        <img src="logo.png" alt="Company Logo">
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="includes/sidebar.js"></script>
     <script src="js/script.js"></script>
     <script>
         $(document).ready(function() {
-            // Theme Toggle Logic
-            $('#themeToggle').on('click', function() {
-                $('body').toggleClass('light-theme dark-theme');
-                // Save preference to localStorage
-                if ($('body').hasClass('light-theme')) {
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    localStorage.setItem('theme', 'dark');
-                }
-            });
-
-            // Load theme preference on page load
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                $('body').removeClass('light-theme dark-theme').addClass(savedTheme + '-theme');
-            } else {
-                // Default to dark if no preference saved
-                $('body').addClass('dark-theme');
-            }
-
+            // Initialize sidebar
+            initializeSidebar();
+            
             // Dynamic Logo Logic
             let idleTimeout;
             const dynamicLogoContainer = $('#dynamicLogoContainer');
