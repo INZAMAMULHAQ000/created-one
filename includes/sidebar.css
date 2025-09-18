@@ -1,0 +1,121 @@
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100vh;
+    background: var(--form-bg);
+    border-right: 1px solid var(--form-border);
+    transition: left 0.3s ease;
+    z-index: 1050;
+    overflow-y: auto;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sidebar.show {
+    left: 0;
+}
+
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--form-border);
+    text-align: center;
+}
+
+.sidebar-menu {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.sidebar-menu li {
+    border-bottom: 1px solid var(--form-border);
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 15px 20px;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu a.active {
+    background: var(--accent-color);
+    color: white;
+    padding-left: 30px;
+}
+
+.sidebar-menu .menu-section {
+    padding: 10px 20px;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--form-border);
+    background: rgba(0,0,0,0.05);
+}
+
+body.dark-theme .sidebar-menu .menu-section {
+    background: rgba(255,255,255,0.05);
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1040;
+    display: none;
+}
+
+.sidebar-overlay.show {
+    display: block;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-right: 1rem;
+}
+
+.main-content {
+    transition: margin-left 0.3s ease;
+}
+
+/* Navbar adjustments for sidebar */
+.navbar {
+    background-color: var(--form-bg);
+    border-bottom: 1px solid var(--form-border);
+}
+
+.navbar-brand,
+.nav-link {
+    font-family: 'Segoe UI', Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: bold;
+    color: var(--text-color) !important;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--accent-color) !important;
+}
+
+@media (min-width: 768px) {
+    .sidebar {
+        left: -280px;
+    }
+    .sidebar.show {
+        left: 0;
+    }
+}
