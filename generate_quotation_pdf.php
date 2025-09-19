@@ -4,10 +4,8 @@ ini_set('display_errors', 1);
 
 session_start();
 require_once "config/database.php";
-require_once 'vendor/autoload.php';
-use Dompdf\Dompdf;
-use Dompdf\Options;
-use mysqli_sql_exception;
+require_once 'fpdf/fpdf184/fpdf.php';
+require_once 'includes/number_to_words.php';
 
 if(!isset($_SESSION['loggedin'])) {
     header("location: index.php");
@@ -29,340 +27,371 @@ if (empty($selected_materials_data)) {
     die("Error: No materials selected for quotation.");
 }
 
-// Read QR code image and convert to base64
-$qr_code_file = __DIR__ . '/QR.jpg';
-$qr_code_data = '';
-if (file_exists($qr_code_file)) {
-    $qr_code_type = pathinfo($qr_code_file, PATHINFO_EXTENSION);
-    $qr_code_data = 'data:image/' . $qr_code_type . ';base64,' . base64_encode(file_get_contents($qr_code_file));
-} else {
-    error_log("QR code image not found at: " . $qr_code_file);
-}
-
-// Read Sun logo image and convert to base64
-$sun_logo_file = __DIR__ . '/Sun.jpeg';
-$sun_logo_data = '';
-if (file_exists($sun_logo_file)) {
-    $sun_logo_type = pathinfo($sun_logo_file, PATHINFO_EXTENSION);
-    $sun_logo_data = 'data:image/' . $sun_logo_type . ';base64,' . base64_encode(file_get_contents($sun_logo_file));
-} else {
-    error_log("Sun logo image not found at: " . $sun_logo_file);
-}
-
-// Read G-Pay image and convert to base64
-$gpay_file = __DIR__ . '/g_pay.jpeg';
-$gpay_data = '';
-if (file_exists($gpay_file)) {
-    $gpay_type = pathinfo($gpay_file, PATHINFO_EXTENSION);
-    $gpay_data = 'data:image/' . $gpay_type . ';base64,' . base64_encode(file_get_contents($gpay_file));
-} else {
-    error_log("G-Pay image not found at: " . $gpay_file);
-}
-
 // Process materials data
 $total_price_before_gst = 0;
-$html_material_rows = '';
 $item_count = 1;
+$materials_for_pdf = [];
 
 foreach ($selected_materials_data as $item) {
     $item_id = $item['id'];
-    $item_name = htmlspecialchars($item['name']);
-    $item_hsn_code = htmlspecialchars($item['hsn_code']);
+    $item_name = $item['name'];
+    $item_hsn_code = $item['hsn_code'];
     $item_price_per_unit = floatval($item['price_per_unit']);
     $item_quantity = intval($item['quantity']);
     $item_subtotal = $item_price_per_unit * $item_quantity;
     $total_price_before_gst += $item_subtotal;
 
-    // Pre-format price and subtotal for display
-    $display_price_per_unit = number_format($item_price_per_unit, 2);
-    $display_item_subtotal = number_format($item_subtotal, 2);
-
-    $html_material_rows .= '
-            <tr>
-                <td>' . $item_count++ . '</td>
-                <td>' . $item_name . '</td>
-                <td>' . $item_hsn_code . '</td>
-                <td>' . $item_quantity . '</td>
-                <td>₹' . $display_price_per_unit . '</td>
-                <td>₹' . $display_item_subtotal . '</td>
-            </tr>';
+    $materials_for_pdf[] = [
+        'sl_no' => $item_count++,
+        'name' => $item_name,
+        'hsn_code' => $item_hsn_code,
+        'quantity' => $item_quantity,
+        'price_per_unit' => $item_price_per_unit,
+        'subtotal' => $item_subtotal
+    ];
 }
 
-// Quotation details from form
-$quotation_number = htmlspecialchars($_POST['quotation_number']);
+$price = $total_price_before_gst;
+
+// Process quotation details
+$quotation_number = $_POST['quotation_number'];
 $quotation_date_raw = $_POST['date'];
-// Convert date to Indian standard (DD-MM-YYYY)
 $quotation_date = (new DateTime($quotation_date_raw))->format('d-m-Y');
 
-// Customer details
-$customer_name = htmlspecialchars($_POST['customer_name']);
-$customer_company = isset($_POST['customer_company']) ? htmlspecialchars($_POST['customer_company']) : '';
-$customer_address = nl2br(htmlspecialchars($_POST['customer_address']));
-$customer_phone = htmlspecialchars($_POST['customer_phone']);
-$contact_person = isset($_POST['contact_person']) ? htmlspecialchars($_POST['contact_person']) : '';
+// Process customer details
+$customer_name = $_POST['customer_name'];
+$customer_company = isset($_POST['customer_company']) ? $_POST['customer_company'] : '';
+$customer_address = $_POST['customer_address'];
+$customer_phone = $_POST['customer_phone'];
+$contact_person = isset($_POST['contact_person']) ? $_POST['contact_person'] : '';
 $valid_until = isset($_POST['valid_until']) ? (new DateTime($_POST['valid_until']))->format('d-m-Y') : '';
 
-// Generate conditional content before HTML
-$contact_row = '';
-if ($valid_until && $contact_person) {
-    $contact_row = "<tr><td><strong>Contact Person:</strong> {$contact_person}</td><td><strong>Valid Until:</strong> {$valid_until}</td></tr>";
-} elseif ($contact_person) {
-    $contact_row = "<tr><td colspan='2'><strong>Contact Person:</strong> {$contact_person}</td></tr>";
+// Convert amount to words
+$amount_in_words = amountInWords($price);
+
+// Create PDF class extending FPDF for Sales Quotation
+class MalarQuotationPDF extends FPDF
+{
+    private $logo_path;
+    private $qr_path;
+    
+    function __construct($logo_path = '', $qr_path = '') {
+        parent::__construct();
+        $this->logo_path = $logo_path;
+        $this->qr_path = $qr_path;
+    }
+    
+    function Header() {
+        // Header with logo, company info, and QR code
+        
+        // Logo on the left
+        if (file_exists($this->logo_path)) {
+            $this->Image($this->logo_path, 10, 10, 40, 30);
+        }
+        
+        // QR Code on the right
+        if (file_exists($this->qr_path)) {
+            $this->Image($this->qr_path, 175, 10, 25, 25);
+        }
+        
+        // Company information aligned to left with right positioning
+        $this->SetX(55); // Move to the right to avoid logo overlap
+        $this->SetFont('Arial', 'B', 16);
+        $this->Cell(0, 8, 'MALAR PAPER BAGS', 0, 1, 'L');
+        
+        $this->SetX(55); // Move to the right to avoid logo overlap
+        $this->SetFont('Arial', '', 10);
+        $this->Cell(0, 5, '16/2, D.R.R Industrial Estate,', 0, 1, 'L');
+        $this->SetX(55);
+        $this->Cell(0, 5, 'Near NCC Head Office,', 0, 1, 'L');
+        $this->SetX(55);
+        $this->Cell(0, 5, 'Ondipudur, Singanallur,', 0, 1, 'L');
+        $this->SetX(55);
+        $this->Cell(0, 5, 'Coimbatore-641005', 0, 1, 'L');
+        
+        $this->SetX(55);
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(0, 5, 'www.malarpaperbags.in', 0, 1, 'L');
+        
+        $this->Ln(5);
+        
+        // SALES QUOTATION title
+        $this->SetFont('Arial', 'B', 14);
+        $this->SetFillColor(220, 220, 220); // Light gray background
+        $this->SetTextColor(0, 0, 0); // Black text
+        $this->Cell(0, 10, 'SALES QUOTATION', 1, 1, 'C', true);
+        $this->SetTextColor(0, 0, 0); // Reset to black text
+        
+        $this->Ln(5);
+    }
+    
+    function Footer() {
+        $this->SetY(-15);
+        $this->SetFont('Arial', 'I', 8);
+        $this->Cell(0, 10, 'Page ' . $this->PageNo(), 0, 0, 'C');
+    }
+    
+    function QuotationDetails($quotation_number, $quotation_date, $contact_person, $valid_until) {
+        $this->SetFont('Arial', '', 10);
+        
+        // Set light gray background for labels
+        $this->SetFillColor(220, 220, 220);
+        
+        // Quotation details table
+        $this->Cell(45, 8, 'Quotation No:', 1, 0, 'L', true);
+        $this->Cell(45, 8, $quotation_number, 1, 0, 'L');
+        $this->Cell(45, 8, 'Date:', 1, 0, 'L', true);
+        $this->Cell(55, 8, $quotation_date, 1, 1, 'L');
+        
+        if ($contact_person || $valid_until) {
+            $this->Cell(45, 8, 'Contact Person:', 1, 0, 'L', true);
+            $this->Cell(45, 8, $contact_person, 1, 0, 'L');
+            $this->Cell(45, 8, 'Valid Until:', 1, 0, 'L', true);
+            $this->Cell(55, 8, $valid_until, 1, 1, 'L');
+        }
+        
+        $this->Ln(5);
+    }
+    
+    function AddressSection($customer_name, $customer_address, $customer_phone, $customer_company = '') {
+        $this->SetFont('Arial', 'B', 8); // Reduced font size
+        
+        // Set light gray background for Customer Details header
+        $this->SetFillColor(220, 220, 220); // Light gray background
+        $this->SetTextColor(0, 0, 0); // Black text
+        
+        // Customer Details section
+        $this->Cell(190, 6, 'CUSTOMER DETAILS', 1, 1, 'C', true); // Full width header
+        
+        // Reset to normal background for content
+        $this->SetFillColor(255, 255, 255); // White background
+        $this->SetFont('Arial', '', 7); // Smaller content font
+        
+        // Customer information
+        $customer_info = $customer_name;
+        if ($customer_company) {
+            $customer_info .= "\nCompany: " . $customer_company;
+        }
+        $customer_info .= "\nAddress: " . $customer_address;
+        $customer_info .= "\nPhone: " . $customer_phone;
+        
+        // Split customer info into lines
+        $info_lines = explode("\n", $customer_info);
+        
+        foreach ($info_lines as $line) {
+            $this->Cell(190, 4, $line, 1, 1, 'L'); // Full width for each line
+        }
+        
+        $this->Ln(3); // Reduced spacing
+    }
+    
+    function MaterialsTable($materials) {
+        $this->SetFont('Arial', 'B', 7); // Reduced font size
+        
+        // Set light gray background for table headers
+        $this->SetFillColor(200, 200, 200); // Light gray background
+        $this->SetTextColor(0, 0, 0); // Black text
+        
+        // Table headers
+        $this->Cell(15, 6, 'S.No', 1, 0, 'C', true); // Reduced height
+        $this->Cell(70, 6, 'Name/Description', 1, 0, 'C', true);
+        $this->Cell(25, 6, 'HSN Code', 1, 0, 'C', true);
+        $this->Cell(20, 6, 'Qty', 1, 0, 'C', true);
+        $this->Cell(30, 6, 'Rate', 1, 0, 'C', true);
+        $this->Cell(30, 6, 'Amount', 1, 1, 'C', true);
+        
+        // Reset colors for table content
+        $this->SetTextColor(0, 0, 0);
+        $this->SetFont('Arial', '', 6); // Smaller content font
+        
+        // Table rows
+        foreach ($materials as $material) {
+            $this->Cell(15, 4, $material['sl_no'], 1, 0, 'C'); // Reduced height
+            $this->Cell(70, 4, $material['name'], 1, 0, 'L');
+            $this->Cell(25, 4, $material['hsn_code'], 1, 0, 'C');
+            $this->Cell(20, 4, $material['quantity'], 1, 0, 'C');
+            $this->Cell(30, 4, 'Rs. ' . number_format($material['price_per_unit'], 2), 1, 0, 'R');
+            $this->Cell(30, 4, 'Rs. ' . number_format($material['subtotal'], 2), 1, 1, 'R');
+        }
+        
+        $this->Ln(2); // Reduced spacing
+    }
+    
+    function TotalsSection($total) {
+        $this->SetFont('Arial', 'B', 8); // Slightly larger font size for quotation total
+        
+        $x_start = 130;
+        $this->SetX($x_start);
+        
+        // Grand Total
+        $this->SetFillColor(180, 180, 180); // Gray background
+        $this->SetTextColor(0, 0, 0); // Black text
+        $this->Cell(30, 6, 'TOTAL:', 1, 0, 'L', true); // Slightly taller for emphasis
+        $this->Cell(30, 6, 'Rs. ' . number_format($total, 2), 1, 1, 'R', true);
+        $this->SetTextColor(0, 0, 0); // Reset to black text
+        
+        $this->Ln(3); // Reduced spacing
+    }
+    
+    function AmountInWords($amount_words) {
+        $this->SetFont('Arial', 'B', 8); // Reduced font size
+        $this->Cell(0, 6, 'Amount in Words: ' . $amount_words, 1, 1, 'L'); // Reduced height
+        $this->Ln(2); // Reduced spacing
+    }
+    
+    function TermsAndSignature() {
+        $this->SetFont('Arial', 'B', 7); // Reduced font size
+        
+        // Terms & Conditions Section
+        $this->SetFillColor(220, 220, 220); // Light gray background
+        $this->Cell(190, 6, 'Terms & Conditions:', 1, 1, 'L', true);
+        
+        $this->SetFont('Arial', '', 6); // Smaller font for terms
+        $terms = [
+            '1. Goods once sold cannot be taken back or exchanged.',
+            '2. Our responsibility ceases immediately the goods are delivered.',
+            '3. Payment: 50% advance, balance on delivery.',
+            '4. Delivery: 15-20 working days from receipt of order.',
+            '5. GST extra as applicable.',
+            '6. Subject to Coimbatore Jurisdiction.'
+        ];
+        
+        foreach ($terms as $term) {
+            $this->Cell(190, 3, $term, 1, 1, 'L');
+        }
+        
+        $this->Ln(5);
+        
+        // Signature section
+        $this->SetFont('Arial', 'B', 7);
+        $this->Cell(110, 4, '', 0, 0, 'L'); // Empty space for terms
+        $this->Cell(80, 4, 'For MALAR PAPER BAGS', 0, 1, 'C');
+        
+        // Only signature box
+        $this->Cell(110, 15, '', 0, 0, 'L'); // Empty space
+        $this->Cell(80, 15, '', 1, 1, 'C'); // Signature box
+        
+        $this->SetFont('Arial', 'B', 6); // Smaller font for signature label
+        $this->Cell(110, 3, '', 0, 0, 'L');
+        $this->Cell(80, 3, 'Authorized Signatory', 0, 1, 'C');
+    }
+    
+    function BankDetailsSection($gpay_path = '') {
+        // Push content to the absolute bottom of page, just above footer
+        $this->Ln(22); // Maximum spacing to move content to absolute bottom
+        
+        // Save current Y position for all three columns
+        $start_y = $this->GetY();
+        
+        // LEFT COLUMN - Bank Details (leftmost part)
+        $this->SetXY(10, $start_y);
+        $this->SetFont('Arial', 'B', 8);
+        $this->Cell(60, 5, 'BANK DETAILS:', 0, 1, 'L');
+        
+        $this->SetX(10);
+        $this->SetFont('Arial', 'B', 7);
+        $this->Cell(60, 4, 'ACCOUNT NAME:', 0, 1, 'L');
+        $this->SetX(10);
+        $this->SetFont('Arial', '', 7);
+        $this->Cell(60, 4, 'MALAR PAPER BAGS', 0, 1, 'L');
+        
+        $this->SetX(10);
+        $this->SetFont('Arial', 'B', 7);
+        $this->Cell(60, 4, 'ACCOUNT NUMBER:', 0, 1, 'L');
+        $this->SetX(10);
+        $this->SetFont('Arial', '', 7);
+        $this->Cell(60, 4, '50200090346107', 0, 1, 'L');
+        
+        $this->SetX(10);
+        $this->SetFont('Arial', 'B', 7);
+        $this->Cell(60, 4, 'BANK NAME:', 0, 1, 'L');
+        $this->SetX(10);
+        $this->SetFont('Arial', '', 7);
+        $this->Cell(60, 4, 'HDFC BANK, KALAPATTI BRANCH', 0, 1, 'L');
+        
+        $this->SetX(10);
+        $this->SetFont('Arial', 'B', 7);
+        $this->Cell(60, 4, 'IFSC CODE:', 0, 1, 'L');
+        $this->SetX(10);
+        $this->SetFont('Arial', '', 7);
+        $this->Cell(60, 4, 'HDFC0001068', 0, 1, 'L');
+        
+        // MIDDLE COLUMN - G-Pay QR Code
+        if (file_exists($gpay_path)) {
+            // Position G-Pay in the middle
+            $this->SetXY(90, $start_y);
+            $this->SetFont('Arial', 'B', 5);
+            $this->Cell(40, 2, 'Scan to Pay via G-Pay', 0, 1, 'C');
+            
+            // Add G-Pay QR code image in middle
+            $this->Image($gpay_path, 95, $start_y + 3, 30, 30);
+        } else {
+            // If G-Pay image doesn't exist, show placeholder in middle
+            $this->SetXY(90, $start_y);
+            $this->SetFont('Arial', 'B', 5);
+            $this->Cell(40, 2, 'G-Pay Payment', 0, 1, 'C');
+            $this->SetXY(90, $start_y + 3);
+            $this->Cell(40, 30, 'G-Pay QR Code\n(Image not found)', 1, 1, 'C');
+        }
+        
+        // RIGHT COLUMN - Note about GST
+        $this->SetXY(140, $start_y);
+        $this->SetFont('Arial', 'B', 7);
+        $this->Cell(60, 5, 'Note:', 0, 1, 'L');
+        
+        $this->SetFont('Arial', '', 6);
+        $note_text = [
+            'GST will be added as per',
+            'applicable rates at the time',
+            'of final billing.',
+            '',
+            'This quotation is valid for',
+            'the period mentioned above.'
+        ];
+        
+        foreach ($note_text as $note) {
+            $this->SetX(140);
+            $this->Cell(60, 4, $note, 0, 1, 'L');
+        }
+    }
 }
 
-$company_info = $customer_company ? "<strong>Company:</strong> {$customer_company}<br>" : "";
-$qr_code_html = $qr_code_data ? "<img src='{$qr_code_data}' style='width: 25px; height: 25px;'><br>" : "";
-$sun_logo_html = $sun_logo_data ? "<img src='{$sun_logo_data}' alt='Sun Logo' style='width: 70px; height: 80px;'>" : "";
-$qr_code_top_html = $qr_code_data ? "<img src='{$qr_code_data}' alt='QR Code' style='width: 80px; height: 80px;'>" : "";
-$gpay_html = $gpay_data ? "<img src='{$gpay_data}' alt='G-Pay QR' style='width: 80px; height: 80px;'>" : "";
+// Create PDF
+$logo_path = __DIR__ . '/Sun.jpeg';
+$qr_path = __DIR__ . '/QR.jpg';
+$gpay_path = __DIR__ . '/g_pay.jpeg';
 
-// Pre-process total for display
-$display_total = number_format($total_price_before_gst, 2);
+$pdf = new MalarQuotationPDF($logo_path, $qr_path);
+$pdf->AddPage();
 
-// Initialize Dompdf with simplified options
-$options = new Options();
-$options->set('isHtml5ParserEnabled', true);
-$options->set('isPhpEnabled', false); // Disable PHP in HTML
-$options->set('isFontSubsettingEnabled', false); // Disable to avoid font issues
-$options->set('defaultFont', 'Arial'); // Use simpler font
-$options->set('isRemoteEnabled', false); // Disable remote loading
-$dompdf = new Dompdf($options);
+// Add content
+$pdf->QuotationDetails($quotation_number, $quotation_date, $contact_person, $valid_until);
+$pdf->AddressSection($customer_name, $customer_address, $customer_phone, $customer_company);
+$pdf->MaterialsTable($materials_for_pdf);
+$pdf->TotalsSection($price);
+$pdf->AmountInWords($amount_in_words);
+$pdf->TermsAndSignature();
+$pdf->BankDetailsSection($gpay_path);
 
-// Generate HTML content with professional structure matching invoice PDF
-$html = <<<HTML
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Sales Quotation</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            font-size: 10pt;
-            line-height: 1.2;
-        }
-        h1 {
-            font-size: 18pt;
-            margin-bottom: 10px;
-            color: #0066cc;
-            text-align: center;
-        }
-        h3 {
-            font-size: 14pt;
-            margin-bottom: 5px;
-        }
-        p {
-            margin-bottom: 5px;
-        }
-        .header {
-            position: relative;
-            text-align: center;
-            color: #0066cc;
-            margin-bottom: 20px;
-            min-height: 100px;
-        }
-        .header-left {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 80px;
-        }
-        .header-right {
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 80px;
-        }
-        .header-center {
-            margin: 0 90px;
-            padding-top: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-            font-size: 9pt;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 6px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        .total-section {
-            text-align: right;
-            font-weight: bold;
-            font-size: 12pt;
-            margin: 15px 0;
-            background-color: #f0f0f0;
-            padding: 8px;
-        }
-        .terms {
-            margin-top: 30px;
-            font-size: 8pt;
-        }
-        .signature {
-            text-align: right;
-            margin-top: 30px;
-        }
-        .banking-section {
-            border: 1px solid #ddd;
-            margin-top: 20px;
-            background-color: #f9f9f9;
-        }
-        .banking-header {
-            background-color: #4682B4;
-            color: white;
-            text-align: center;
-            padding: 8px;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <!-- Header with logos and company info -->
-    <div class="header">
-        <!-- Sun logo on left -->
-        <div class="header-left">
-            {$sun_logo_html}
-        </div>
-        
-        <!-- QR code on right -->
-        <div class="header-right">
-            {$qr_code_top_html}
-        </div>
-        
-        <!-- Company details in center -->
-        <div class="header-center">
-            <h1>MALAR PAPER BAGS</h1>
-            <p style="font-size: 9pt;">16/2, D.R.R Industrial Estate,<br>
-            Near NCC Head Office, Ondipudur, Singanallur,<br>
-            Coimbatore-641005<br>
-            Ph: 6383148504 | Email: malarpaperbags@gmail.com<br>
-            GSTIN: 33ETMPM5267A1ZO</p>
-        </div>
-    </div>
-
-    <!-- Quotation Title -->
-    <h2 style="text-align: center; background-color: #f0f0f0; padding: 8px; margin: 20px 0;">
-        SALES QUOTATION
-    </h2>
-
-    <!-- Quotation Details -->
-    <table>
-        <tr>
-            <td style="background-color: #f0f0f0; font-weight: bold;">Quotation No:</td>
-            <td>{$quotation_number}</td>
-            <td style="background-color: #f0f0f0; font-weight: bold;">Date:</td>
-            <td>{$quotation_date}</td>
-        </tr>
-
-        {$contact_row}
-    </table>
-
-    <!-- Customer Details -->
-    <h4>Customer Details:</h4>
-    <div style="border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; margin-bottom: 15px;">
-        <strong>Customer:</strong> {$customer_name}<br>
-        {$company_info}
-        <strong>Address:</strong> {$customer_address}<br>
-        <strong>Phone:</strong> {$customer_phone}
-    </div>
-
-    <!-- Materials Table -->
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 8%;">#</th>
-                <th style="width: 40%;">Material Description</th>
-                <th style="width: 15%;">HSN Code</th>
-                <th style="width: 10%;">Quantity</th>
-                <th style="width: 15%;">Price/Unit</th>
-                <th style="width: 15%;">Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {$html_material_rows}
-        </tbody>
-    </table>
-
-    <!-- Total Section -->
-    <div class="total-section">
-        TOTAL: ₹{$display_total}
-    </div>
-
-    <!-- Terms & Conditions -->
-    <div class="terms">
-        <h4>Terms & Conditions:</h4>
-        <ul style="margin: 0; padding-left: 20px;">
-            <li>Goods once sold cannot be taken back or exchanged</li>
-            <li>Our responsibility ceases immediately the goods are delivered or handed over to the carrier</li>
-            <li>Subject to Coimbatore jurisdiction</li>
-            <li>Payment: 50% advance, balance on delivery</li>
-            <li>Delivery: 15-20 working days from receipt of order</li>
-            <li>GST extra as applicable</li>
-        </ul>
-    </div>
-
-    <!-- Banking Details with G-Pay -->
-    <div class="banking-section">
-        <div class="banking-header">
-            Banking Details
-        </div>
-        <table style="border: none; margin: 0;">
-            <tr style="border: none;">
-                <td style="border: none; padding: 8px; width: 60%; vertical-align: top;">
-                    <strong>ACCOUNT NAME:</strong> MALAR PAPER BAGS<br>
-                    <strong>ACCOUNT NUMBER:</strong> 50200090346107<br>
-                    <strong>BANK NAME:</strong> HDFC BANK, KALAPATTI BRANCH<br>
-                    <strong>IFSC CODE:</strong> HDFC0001068
-                </td>
-                <td style="border: none; padding: 8px; text-align: center; width: 40%; vertical-align: middle;">
-                    {$gpay_html}<br>
-                    <span style="font-size: 8pt; font-weight: bold;">Scan to Pay via G-Pay</span>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Signature -->
-    <div class="signature">
-        <p style="margin-top: 40px;">For MALAR PAPER BAGS</p>
-        <br><br>
-        <p style="border-top: 1px solid black; padding-top: 5px; width: 200px;">Authorized Signatory</p>
-    </div>
-
-</body>
-</html>
-HTML;
-
-$dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'portrait');
-$dompdf->render();
-
-// Save PDF file
+// Create quotations directory if it doesn't exist
 if (!file_exists('quotations')) {
     mkdir('quotations', 0777, true);
 }
 
-$pdf_filename = 'quotations/Quotation_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $quotation_number) . '.pdf';
+// Output PDF
+$pdf_filename = 'quotations/MALAR_Quotation_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $quotation_number) . '.pdf';
 $output_file = __DIR__ . '/' . $pdf_filename;
 
-file_put_contents($output_file, $dompdf->output());
+$pdf->Output('F', $output_file);
 
-// Insert into database
+// Store quotation details in the database
 $stmt = mysqli_prepare($conn, "INSERT INTO sales_quotations (quotation_number, customer_name, quotation_date, pdf_path) VALUES (?, ?, ?, ?)");
 mysqli_stmt_bind_param($stmt, "ssss", $quotation_number, $customer_name, $quotation_date_raw, $pdf_filename);
 
 try {
     if (mysqli_stmt_execute($stmt)) {
-        // Output the PDF to browser
-        $dompdf->stream("Quotation_{$quotation_number}.pdf", array("Attachment" => false));
+        header("Location: quotation_history.php?status=success&quotation=" . urlencode($quotation_number));
+        exit();
     }
 } catch (mysqli_sql_exception $e) {
     if ($e->getCode() == 1062) {
@@ -376,3 +405,4 @@ try {
 
 mysqli_stmt_close($stmt);
 mysqli_close($conn);
+?>

@@ -17,7 +17,7 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Get all customers for dropdown
         if (isset($_GET['action']) && $_GET['action'] === 'get_all') {
-            $sql = "SELECT id, customer_name, customer_company, phone_no, email, address FROM customers ORDER BY customer_name ASC";
+            $sql = "SELECT id, customer_name, customer_company, phone_no, email, gst, address FROM customers ORDER BY customer_name ASC";
             $result = mysqli_query($conn, $sql);
             
             if ($result) {
@@ -34,7 +34,7 @@ try {
         // Get customer by ID
         elseif (isset($_GET['action']) && $_GET['action'] === 'get_by_id' && isset($_GET['id'])) {
             $id = intval($_GET['id']);
-            $sql = "SELECT id, customer_name, customer_company, phone_no, email, address FROM customers WHERE id = $id";
+            $sql = "SELECT id, customer_name, customer_company, phone_no, email, gst, address FROM customers WHERE id = $id";
             $result = mysqli_query($conn, $sql);
             
             if ($result && mysqli_num_rows($result) > 0) {
@@ -48,7 +48,7 @@ try {
         // Search customers by name or company
         elseif (isset($_GET['action']) && $_GET['action'] === 'search' && isset($_GET['term'])) {
             $term = mysqli_real_escape_string($conn, $_GET['term']);
-            $sql = "SELECT id, customer_name, customer_company, phone_no, email, address 
+            $sql = "SELECT id, customer_name, customer_company, phone_no, email, gst, address 
                     FROM customers 
                     WHERE customer_name LIKE '%$term%' 
                        OR customer_company LIKE '%$term%' 

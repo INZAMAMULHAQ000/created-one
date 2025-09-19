@@ -308,7 +308,7 @@ $transports_result = mysqli_query($conn, $transports_query);
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>GSTIN ID</label>
-                        <input type="text" name="gstin" class="form-control">
+                        <input type="text" name="gstin" id="gstin" class="form-control">
                     </div>
                 </div>
 
@@ -394,29 +394,8 @@ $transports_result = mysqli_query($conn, $transports_query);
                         <label for="po_number" class="form-label main-text">PO Number:</label>
                         <input type="text" class="form-control" id="po_number" name="po_number">
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label main-text">Invoice Template:</label>
-                        <div class="mt-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="template" id="template_original" value="original" checked>
-                                <label class="form-check-label main-text" for="template_original">
-                                    Original Template
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="template" id="template_malar" value="malar">
-                                <label class="form-check-label main-text" for="template_malar">
-                                    MALAR PAPER BAGS (DomPDF)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="template" id="template_malar_fpdf" value="malar_fpdf">
-                                <label class="form-check-label main-text" for="template_malar_fpdf">
-                                    MALAR PAPER BAGS (FPDF) ⭐
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Hidden input to always use MALAR PAPER BAGS (FPDF) template -->
+                    <input type="hidden" name="template" value="malar_fpdf">
                 </div>
 
                 <div class="text-center mt-4">
@@ -445,6 +424,7 @@ $transports_result = mysqli_query($conn, $transports_query);
                 customerDropdown.initializeDropdown({
                     nameFieldId: 'customer_name',
                     phoneFieldId: 'customer_phone',
+                    gstFieldId: 'gstin',
                     addressFieldId: 'customer_address'
                 });
             }
@@ -642,16 +622,9 @@ $transports_result = mysqli_query($conn, $transports_query);
                 });
             }
 
-            // Handle form submission with template selection
+            // Handle form submission - always use MALAR PAPER BAGS (FPDF) template
             $('#billingForm').on('submit', function(e) {
-                const selectedTemplate = $('input[name="template"]:checked').val();
-                if (selectedTemplate === 'malar') {
-                    $(this).attr('action', 'generate_malar_invoice_pdf.php');
-                } else if (selectedTemplate === 'malar_fpdf') {
-                    $(this).attr('action', 'generate_malar_invoice_fpdf.php');
-                } else {
-                    $(this).attr('action', 'generate_pdf.php');
-                }
+                $(this).attr('action', 'generate_malar_invoice_fpdf.php');
                 // Form will submit normally after action is set
             });
         });

@@ -93,6 +93,9 @@ $cgst_rate = isset($_POST['cgst_rate']) ? floatval($_POST['cgst_rate']) : 0;
 $sgst_rate = isset($_POST['sgst_rate']) ? floatval($_POST['sgst_rate']) : 0;
 $igst_rate = isset($_POST['igst_rate']) ? floatval($_POST['igst_rate']) : 0;
 
+// Check if any GST is applicable
+$has_gst = ($cgst_rate > 0 || $sgst_rate > 0 || $igst_rate > 0);
+
 $cgst_amount = ($price * $cgst_rate) / 100;
 $sgst_amount = ($price * $sgst_rate) / 100;
 $igst_amount = ($price * $igst_rate) / 100;
@@ -136,6 +139,9 @@ $options->set('isPhpEnabled', true);
 $options->set('isFontSubsettingEnabled', true);
 $options->set('defaultFont', 'DejaVu Sans');
 $dompdf = new Dompdf($options);
+
+// Determine invoice title based on GST
+$invoice_title = $has_gst ? 'TAX INVOICE' : 'INVOICE';
 
 // Generate HTML content
 $html = <<<HTML
@@ -408,7 +414,7 @@ $html = <<<HTML
     </div>
 
     <!-- Invoice Title -->
-    <div class="invoice-title">TAX INVOICE</div>
+    <div class="invoice-title">{$invoice_title}</div>
 
     <!-- Invoice Details Table -->
     <table class="details-table">

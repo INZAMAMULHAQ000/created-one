@@ -13,6 +13,7 @@ class CustomerDropdown {
             companyFieldId = null,
             phoneFieldId = null,
             emailFieldId = null,
+            gstFieldId = null,
             addressFieldId = null,
             dropdownContainerId = null
         } = config;
@@ -209,6 +210,12 @@ class CustomerDropdown {
             if (emailField) emailField.value = customer.email || '';
         }
 
+        // Fill GST field if exists
+        if (config.gstFieldId) {
+            const gstField = document.getElementById(config.gstFieldId);
+            if (gstField) gstField.value = customer.gst || '';
+        }
+
         // Fill address field if exists
         if (config.addressFieldId) {
             const addressField = document.getElementById(config.addressFieldId);
@@ -216,7 +223,7 @@ class CustomerDropdown {
         }
 
         // Trigger change events
-        [config.nameFieldId, config.companyFieldId, config.phoneFieldId, config.emailFieldId, config.addressFieldId]
+        [config.nameFieldId, config.companyFieldId, config.phoneFieldId, config.emailFieldId, config.gstFieldId, config.addressFieldId]
         .filter(Boolean)
             .forEach(fieldId => {
                 const field = document.getElementById(fieldId);

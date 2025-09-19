@@ -15,12 +15,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $customer_company = $_POST['customer_company'] ? mysqli_real_escape_string($conn, $_POST['customer_company']) : NULL;
         $phone_no = mysqli_real_escape_string($conn, $_POST['phone_no']);
         $email = $_POST['email'] ? mysqli_real_escape_string($conn, $_POST['email']) : NULL;
+        $gst = $_POST['gst'] ? mysqli_real_escape_string($conn, $_POST['gst']) : NULL;
         $address = mysqli_real_escape_string($conn, $_POST['address']);
         
         $company_part = $customer_company ? "'$customer_company'" : 'NULL';
         $email_part = $email ? "'$email'" : 'NULL';
+        $gst_part = $gst ? "'$gst'" : 'NULL';
         
-        $sql = "INSERT INTO customers (customer_name, customer_company, phone_no, email, address) VALUES ('$customer_name', $company_part, '$phone_no', $email_part, '$address')";
+        $sql = "INSERT INTO customers (customer_name, customer_company, phone_no, email, gst, address) VALUES ('$customer_name', $company_part, '$phone_no', $email_part, $gst_part, '$address')";
         $response['success'] = mysqli_query($conn, $sql);
         $response['id'] = mysqli_insert_id($conn);
         if (!$response['success']) {
@@ -32,12 +34,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $customer_company = $_POST['customer_company'] ? mysqli_real_escape_string($conn, $_POST['customer_company']) : NULL;
         $phone_no = mysqli_real_escape_string($conn, $_POST['phone_no']);
         $email = $_POST['email'] ? mysqli_real_escape_string($conn, $_POST['email']) : NULL;
+        $gst = $_POST['gst'] ? mysqli_real_escape_string($conn, $_POST['gst']) : NULL;
         $address = mysqli_real_escape_string($conn, $_POST['address']);
         
         $company_part = $customer_company ? "'$customer_company'" : 'NULL';
         $email_part = $email ? "'$email'" : 'NULL';
+        $gst_part = $gst ? "'$gst'" : 'NULL';
         
-        $sql = "UPDATE customers SET customer_name='$customer_name', customer_company=$company_part, phone_no='$phone_no', email=$email_part, address='$address' WHERE id=$id";
+        $sql = "UPDATE customers SET customer_name='$customer_name', customer_company=$company_part, phone_no='$phone_no', email=$email_part, gst=$gst_part, address='$address' WHERE id=$id";
         $response['success'] = mysqli_query($conn, $sql);
         if (!$response['success']) {
             $response['error'] = mysqli_error($conn);
@@ -258,6 +262,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     </div>
                 </div>
                 <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="gst" class="form-label main-text">GST Number (Optional)</label>
+                        <input type="text" class="form-control" id="gst" name="gst" placeholder="Enter GST Number">
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-12 mb-3">
                         <label for="address" class="form-label main-text">Address *</label>
                         <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
@@ -280,6 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             <th>Company</th>
                             <th>Phone</th>
                             <th>Email</th>
+                            <th>GST</th>
                             <th>Address</th>
                             <th>Actions</th>
                         </tr>
@@ -366,6 +377,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     <td>${customer.customer_company || '-'}</td>
                     <td>${customer.phone_no}</td>
                     <td>${customer.email || '-'}</td>
+                    <td>${customer.gst || '-'}</td>
                     <td>${customer.address.length > 50 ? customer.address.substring(0, 50) + '...' : customer.address}</td>
                     <td>
                         <button class="btn btn-accent btn-sm" onclick="editCustomer(${customer.id})">Edit</button>
@@ -395,6 +407,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         document.getElementById('customerCompany').value = customer.customer_company || '';
                         document.getElementById('phoneNo').value = customer.phone_no;
                         document.getElementById('email').value = customer.email || '';
+                        document.getElementById('gst').value = customer.gst || '';
                         document.getElementById('address').value = customer.address;
                         
                         editingCustomerId = id;

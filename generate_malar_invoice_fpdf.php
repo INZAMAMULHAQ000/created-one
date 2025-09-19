@@ -66,6 +66,9 @@ $cgst_rate = isset($_POST['cgst_rate']) ? floatval($_POST['cgst_rate']) : 0;
 $sgst_rate = isset($_POST['sgst_rate']) ? floatval($_POST['sgst_rate']) : 0;
 $igst_rate = isset($_POST['igst_rate']) ? floatval($_POST['igst_rate']) : 0;
 
+// Check if any GST is applicable
+$has_gst = ($cgst_rate > 0 || $sgst_rate > 0 || $igst_rate > 0);
+
 $cgst_amount = ($price * $cgst_rate) / 100;
 $sgst_amount = ($price * $sgst_rate) / 100;
 $igst_amount = ($price * $igst_rate) / 100;
@@ -92,11 +95,13 @@ class MalarInvoicePDF extends FPDF
 {
     private $logo_path;
     private $qr_path;
+    private $has_gst;
     
-    function __construct($logo_path = '', $qr_path = '') {
+    function __construct($logo_path = '', $qr_path = '', $has_gst = false) {
         parent::__construct();
         $this->logo_path = $logo_path;
         $this->qr_path = $qr_path;
+        $this->has_gst = $has_gst;
     }
     
     function Header() {
@@ -133,12 +138,20 @@ class MalarInvoicePDF extends FPDF
         
         $this->Ln(5);
         
-        // TAX INVOICE title
-        $this->SetFont('Arial', 'B', 14);
-        $this->SetFillColor(220, 220, 220); // Light gray background
-        $this->SetTextColor(0, 0, 0); // Black text
-        $this->Cell(0, 10, 'TAX INVOICE', 1, 1, 'C', true);
-        $this->SetTextColor(0, 0, 0); // Reset to black text
+        // TAX INVOICE title - only show if GST is applicable
+        if ($this->has_gst) {
+            $this->SetFont('Arial', 'B', 14);
+            $this->SetFillColor(220, 220, 220); // Light gray background
+            $this->SetTextColor(0, 0, 0); // Black text
+            $this->Cell(0, 10, 'TAX INVOICE', 1, 1, 'C', true);
+            $this->SetTextColor(0, 0, 0); // Reset to black text
+        } else {
+            $this->SetFont('Arial', 'B', 14);
+            $this->SetFillColor(220, 220, 220); // Light gray background
+            $this->SetTextColor(0, 0, 0); // Black text
+            $this->Cell(0, 10, 'INVOICE', 1, 1, 'C', true);
+            $this->SetTextColor(0, 0, 0); // Reset to black text
+        }
         
         $this->Ln(5);
     }
@@ -394,7 +407,7 @@ $logo_path = __DIR__ . '/Sun.jpeg';
 $qr_path = __DIR__ . '/QR.jpg';
 $gpay_path = __DIR__ . '/g_pay.jpeg';
 
-$pdf = new MalarInvoicePDF($logo_path, $qr_path);
+$pdf = new MalarInvoicePDF($logo_path, $qr_path, $has_gst);
 $pdf->AddPage();
 
 // Add content
