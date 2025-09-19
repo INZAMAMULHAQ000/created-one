@@ -327,9 +327,9 @@ file_put_contents($output_file, $dompdf->output());
 ini_set('display_errors', 0);
 error_reporting(0);
 
-// Store invoice details in the database
-$stmt = mysqli_prepare($conn, "INSERT INTO invoices (invoice_number, customer_name, invoice_date, pdf_path) VALUES (?, ?, ?, ?)");
-mysqli_stmt_bind_param($stmt, "ssss", $invoice_number, $display_customer_name, $invoice_date_raw, $pdf_filename);
+// Store invoice details in the database with billing totals
+$stmt = mysqli_prepare($conn, "INSERT INTO invoices (invoice_number, customer_name, invoice_date, pdf_path, subtotal, cgst_rate, sgst_rate, igst_rate, cgst_amount, sgst_amount, igst_amount, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+mysqli_stmt_bind_param($stmt, "ssssdddddddd", $invoice_number, $display_customer_name, $invoice_date_raw, $pdf_filename, $price, $cgst_rate, $sgst_rate, $igst_rate, $cgst_amount, $sgst_amount, $igst_amount, $total);
 
 try {
     if (mysqli_stmt_execute($stmt)) {

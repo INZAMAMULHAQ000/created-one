@@ -27,18 +27,24 @@ if (mysqli_stmt_num_rows($stmt) > 0) {
 }
 mysqli_stmt_close($stmt);
 
-$purchase_order = htmlspecialchars($_POST['purchase_order']);
+$purchase_order = floatval($_POST['purchase_order']);
 $salary = floatval($_POST['salary']);
 $printing_services = floatval($_POST['printing_services']);
 $petrol_expense = floatval($_POST['petrol_expense']);
-$other_expense = nl2br(htmlspecialchars($_POST['other_expense']));
+$other_expense_1 = floatval($_POST['other_expense_1']);
+$other_expense_2 = floatval($_POST['other_expense_2']);
+$other_expense_3 = floatval($_POST['other_expense_3']);
 
-$total_expense = $salary + $printing_services + $petrol_expense;
+$total_expense = $purchase_order + $salary + $printing_services + $petrol_expense + $other_expense_1 + $other_expense_2 + $other_expense_3;
 
 $display_total_expense = number_format($total_expense, 2);
+$display_purchase_order = number_format($purchase_order, 2);
 $display_salary = number_format($salary, 2);
 $display_printing_services = number_format($printing_services, 2);
 $display_petrol_expense = number_format($petrol_expense, 2);
+$display_other_expense_1 = number_format($other_expense_1, 2);
+$display_other_expense_2 = number_format($other_expense_2, 2);
+$display_other_expense_3 = number_format($other_expense_3, 2);
 
 // Initialize Dompdf
 $options = new Options();
@@ -91,8 +97,8 @@ $html = <<<HTML
             <th>Amount</th>
         </tr>
         <tr>
-            <td>Purchase Order</td>
-            <td>{$purchase_order}</td>
+            <td>Purchase Order Total</td>
+            <td>₹{$display_purchase_order}</td>
         </tr>
         <tr>
             <td>Salary</td>
@@ -107,8 +113,16 @@ $html = <<<HTML
             <td>₹{$display_petrol_expense}</td>
         </tr>
         <tr>
-            <td>Other Expense</td>
-            <td>{$other_expense}</td>
+            <td>Other Expense 1</td>
+            <td>₹{$display_other_expense_1}</td>
+        </tr>
+        <tr>
+            <td>Other Expense 2</td>
+            <td>₹{$display_other_expense_2}</td>
+        </tr>
+        <tr>
+            <td>Other Expense 3</td>
+            <td>₹{$display_other_expense_3}</td>
         </tr>
         <tr>
             <th>Total Expense</th>
@@ -133,8 +147,8 @@ $output_file = __DIR__ . '/' . $pdf_filename;
 
 file_put_contents($output_file, $dompdf->output());
 
-$stmt = mysqli_prepare($conn, "INSERT INTO daily_expenses (expense_date, purchase_order, salary, printing_services, petrol_expense, other_expense, pdf_path) VALUES (?, ?, ?, ?, ?, ?, ?)");
-mysqli_stmt_bind_param($stmt, "ssddsss", $expense_date, $purchase_order, $salary, $printing_services, $petrol_expense, $_POST['other_expense'], $pdf_filename);
+$stmt = mysqli_prepare($conn, "INSERT INTO daily_expenses (expense_date, purchase_order, salary, printing_services, petrol_expense, other_expense_1, other_expense_2, other_expense_3, pdf_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+mysqli_stmt_bind_param($stmt, "sddddddds", $expense_date, $purchase_order, $salary, $printing_services, $petrol_expense, $other_expense_1, $other_expense_2, $other_expense_3, $pdf_filename);
 
 try {
     if (mysqli_stmt_execute($stmt)) {

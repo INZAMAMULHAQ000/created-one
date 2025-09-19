@@ -103,9 +103,17 @@ if(isset($_GET['error'])) {
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label main-text">Other Expense</label>
-                            <textarea name="other_expense" class="form-control" rows="3"></textarea>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label main-text">Other Expense 1</label>
+                            <input type="number" step="0.01" name="other_expense_1" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label main-text">Other Expense 2</label>
+                            <input type="number" step="0.01" name="other_expense_2" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label main-text">Other Expense 3</label>
+                            <input type="number" step="0.01" name="other_expense_3" class="form-control">
                         </div>
                     </div>
 

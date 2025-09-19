@@ -8,7 +8,9 @@ $sql = "CREATE TABLE IF NOT EXISTS daily_expenses (
     salary DECIMAL(10, 2),
     printing_services DECIMAL(10, 2),
     petrol_expense DECIMAL(10, 2),
-    other_expense TEXT,
+    other_expense_1 DECIMAL(10, 2),
+    other_expense_2 DECIMAL(10, 2),
+    other_expense_3 DECIMAL(10, 2),
     pdf_path VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );";
