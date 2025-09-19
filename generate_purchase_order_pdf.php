@@ -9,7 +9,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 // Read QR code image and convert to base64
-$qr_code_file = __DIR__ . '/QR.jpeg';
+$qr_code_file = __DIR__ . '/QR.jpg';
 $qr_code_data = '';
 if (file_exists($qr_code_file)) {
     $qr_code_type = pathinfo($qr_code_file, PATHINFO_EXTENSION);

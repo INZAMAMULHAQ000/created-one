@@ -212,57 +212,17 @@ $materials_result = mysqli_query($conn, $materials_query);
             <h2 class="text-center mb-4 main-text">Generate Sales Quotation</h2>
 
             <form id="quotationForm" action="generate_quotation_pdf.php" method="post" target="_blank">
-                <h5 class="main-text">Office Bio</h5>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Name</label>
-                        <input type="text" name="office_name" class="form-control">
+                        <label for="quotation_number" class="form-label main-text">Quotation Number:</label>
+                        <input type="text" class="form-control" id="quotation_number" name="quotation_number" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Address</label>
-                        <input type="text" name="office_address" class="form-control">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Phone No</label>
-                        <input type="text" name="office_phone" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">GST ID</label>
-                        <input type="text" name="office_gst" class="form-control">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Owner Name</label>
-                        <input type="text" name="office_owner" class="form-control">
+                        <label class="form-label main-text">Date</label>
+                        <input type="date" name="date" class="form-control" required value="<?php echo date('Y-m-d'); ?>">
                     </div>
                 </div>
 
-                <h5 class="main-text mt-4">Quotation Headlines</h5>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Quotation Number</label>
-                        <input type="text" name="quotation_number" class="form-control" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Date of Issue</label>
-                        <input type="date" name="date_issue" class="form-control" required value="<?php echo date('Y-m-d'); ?>">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Date of Submission</label>
-                        <input type="date" name="date_submission" class="form-control" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Contact Person</label>
-                        <input type="text" name="contact_person" class="form-control">
-                    </div>
-                </div>
-
-                <h5 class="main-text mt-4">To</h5>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label main-text">Customer Name</label>
@@ -273,6 +233,8 @@ $materials_result = mysqli_query($conn, $materials_query);
                         <input type="text" name="customer_company" id="customer_company" class="form-control">
                     </div>
                 </div>
+
+                <!-- Customer fields with dropdown integration -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label main-text">Address</label>
@@ -284,10 +246,9 @@ $materials_result = mysqli_query($conn, $materials_query);
                     </div>
                 </div>
 
-                <h5 class="main-text mt-4">Materials</h5>
                 <div class="row">
                     <div class="col-md-8 mb-3">
-                        <label>Material</label>
+                        <label class="form-label main-text">Material</label>
                         <select name="material[]" id="material" class="form-select" multiple="multiple">
                             <?php while($row = mysqli_fetch_assoc($materials_result)): ?>
                                 <option value="<?php echo $row['id']; ?>" data-price="<?php echo $row['price']; ?>" data-hsn="<?php echo $row['hsn_code']; ?>">
@@ -296,20 +257,24 @@ $materials_result = mysqli_query($conn, $materials_query);
                             <?php endwhile; ?>
                         </select>
                     </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label main-text">Total Price</label>
+                        <input type="number" name="price" id="price" class="form-control" required readonly value="0">
+                    </div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-12">
-                        <label>Selected Materials</label>
+                        <label class="form-label main-text">Selected Materials</label>
                         <div id="selectedMaterialsTableContainer" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-bordered table-sm" id="selectedMaterialsTable">
                                 <thead>
                                     <tr>
-                                        <th>S.NO</th>
-                                        <th>Material Description</th>
-                                        <th>HSN Code</th>
-                                        <th>Qty</th>
-                                        <th>Price</th>
+                                        <th>Material</th>
+                                        <th>HSN</th>
+                                        <th>Price/Unit</th>
+                                        <th>Quantity</th>
+                                        <th>Subtotal</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -321,27 +286,21 @@ $materials_result = mysqli_query($conn, $materials_query);
                         <input type="hidden" name="selected_materials_data" id="selectedMaterialsData">
                     </div>
                 </div>
-                
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label class="form-label main-text">Terms and Conditions</label>
-                        <textarea name="terms_conditions" class="form-control" rows="3"></textarea>
-                    </div>
-                </div>
-
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Quote Prepared by</label>
-                        <input type="text" name="quote_prepared_by" class="form-control">
+                        <label class="form-label main-text">Contact Person</label>
+                        <input type="text" name="contact_person" class="form-control">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label main-text">Quote Approved By</label>
-                        <input type="text" name="quote_approved_by" class="form-control">
+                        <label class="form-label main-text">Valid Until</label>
+                        <input type="date" name="valid_until" class="form-control">
                     </div>
                 </div>
 
                 <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-accent btn-lg">Generate Quotation</button>
+                    <button type="submit" class="btn btn-accent btn-lg me-3">Generate Quotation</button>
+                    <a href="debug_quotation_pdf.php" class="btn btn-warning btn-lg me-3" target="_blank">Debug PDF</a>
+                    <a href="simple_quotation_pdf.php" class="btn btn-info btn-lg" target="_blank">Simple PDF Test</a>
                 </div>
             </form>
         </div>
@@ -390,7 +349,6 @@ $materials_result = mysqli_query($conn, $materials_query);
                 }
 
                 // Add newly selected materials to table
-                let item_count = 1;
                 selectedMaterialIds.forEach(function(id) {
                     if (!materialsInTable[id]) {
                         const option = $('#material option[value="' + id + '"]');
@@ -399,11 +357,11 @@ $materials_result = mysqli_query($conn, $materials_query);
                         const pricePerUnit = option.data('price');
 
                         const newRow = `<tr data-id="${id}" data-price-per-unit="${pricePerUnit}">
-                                            <td>${item_count++}</td>
                                             <td>${name}</td>
                                             <td>${hsn}</td>
+                                            <td>₹${pricePerUnit}</td>
                                             <td><input type="number" class="form-control form-control-sm item-quantity" value="1" min="1" style="width: 80px;"></td>
-                                            <td class="item-price">${pricePerUnit}</td>
+                                            <td class="item-subtotal">₹${pricePerUnit}</td>
                                             <td><button type="button" class="btn btn-danger btn-sm remove-item">Remove</button></td>
                                         </tr>`;
                         $('#selectedMaterialsTable tbody').append(newRow);
@@ -431,17 +389,23 @@ $materials_result = mysqli_query($conn, $materials_query);
 
             function updateHiddenDataAndTotal() {
                 const selectedMaterials = [];
-                let count = 1;
+                let totalPrice = 0;
                 $('#selectedMaterialsTable tbody tr').each(function() {
-                    $(this).find('td:first').text(count++);
                     const id = $(this).data('id');
-                    const name = $(this).find('td').eq(1).text().trim();
-                    const hsn_code = $(this).find('td').eq(2).text().trim();
+                    const name = $(this).find('td').eq(0).text().trim();
+                    const hsn_code = $(this).find('td').eq(1).text().trim();
                     const quantity = parseInt($(this).find('.item-quantity').val()) || 0;
                     const price_per_unit = parseFloat($(this).data('price-per-unit'));
+                    const subtotal = price_per_unit * quantity;
+                    
+                    // Update subtotal display
+                    $(this).find('.item-subtotal').text('₹' + subtotal.toFixed(2));
+                    
+                    totalPrice += subtotal;
                     selectedMaterials.push({ id: id, name: name, hsn_code: hsn_code, price_per_unit: price_per_unit, quantity: quantity });
                 });
                 $('#selectedMaterialsData').val(JSON.stringify(selectedMaterials));
+                $('#price').val(totalPrice.toFixed(2));
             }
 
             // Theme Toggle Logic

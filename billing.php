@@ -381,7 +381,7 @@ $transports_result = mysqli_query($conn, $transports_query);
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label>Mode of Transport</label>
                         <select name="transport" id="transport" class="form-select" required>
                             <option value="">Select Mode of Transport</option>
@@ -390,9 +390,32 @@ $transports_result = mysqli_query($conn, $transports_query);
                             <?php endwhile; ?>
                         </select>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="po_number" class="form-label main-text">PO Number:</label>
                         <input type="text" class="form-control" id="po_number" name="po_number">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label main-text">Invoice Template:</label>
+                        <div class="mt-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="template" id="template_original" value="original" checked>
+                                <label class="form-check-label main-text" for="template_original">
+                                    Original Template
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="template" id="template_malar" value="malar">
+                                <label class="form-check-label main-text" for="template_malar">
+                                    MALAR PAPER BAGS (DomPDF)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="template" id="template_malar_fpdf" value="malar_fpdf">
+                                <label class="form-check-label main-text" for="template_malar_fpdf">
+                                    MALAR PAPER BAGS (FPDF) ⭐
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -618,6 +641,19 @@ $transports_result = mysqli_query($conn, $transports_query);
                     localStorage.setItem('invoice_number', this.value);
                 });
             }
+
+            // Handle form submission with template selection
+            $('#billingForm').on('submit', function(e) {
+                const selectedTemplate = $('input[name="template"]:checked').val();
+                if (selectedTemplate === 'malar') {
+                    $(this).attr('action', 'generate_malar_invoice_pdf.php');
+                } else if (selectedTemplate === 'malar_fpdf') {
+                    $(this).attr('action', 'generate_malar_invoice_fpdf.php');
+                } else {
+                    $(this).attr('action', 'generate_pdf.php');
+                }
+                // Form will submit normally after action is set
+            });
         });
     </script>
 </body>
